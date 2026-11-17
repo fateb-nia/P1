@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demonstração - NIA Chatbot Gemini</title>
+<style>
+/* NIA Chatbot Gemini - estilos do widget. Prefixo .nia-cb- evita conflito com o tema. */
+.nia-cb-root, .nia-cb-root * { box-sizing: border-box; }
+.nia-cb-root {
+	--nia-cb-primary: #0b4fa8;
+	--nia-cb-primary-dark: #083a7d;
+	--nia-cb-bg: #ffffff;
+	--nia-cb-text: #1f2933;
+	--nia-cb-muted: #eef2f7;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+	font-size: 15px;
+	line-height: 1.4;
+	color: var(--nia-cb-text);
+}
+
+/* Botao flutuante */
+.nia-cb-toggle {
+	position: fixed; right: 16px; bottom: 16px; z-index: 99998;
+	width: 56px; height: 56px; border: 0; border-radius: 50%;
+	background: var(--nia-cb-primary); color: #fff; cursor: pointer;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+	display: flex; align-items: center; justify-content: center;
+}
+.nia-cb-toggle:hover { background: var(--nia-cb-primary-dark); }
+.nia-cb-toggle:focus-visible, .nia-cb-send:focus-visible, .nia-cb-close:focus-visible, .nia-cb-input:focus-visible {
+	outline: 3px solid #f5a623; outline-offset: 2px;
+}
+.nia-cb-toggle svg { width: 28px; height: 28px; fill: currentColor; }
+
+/* Janela */
+.nia-cb-panel {
+	position: fixed; right: 16px; bottom: 84px; z-index: 99999;
+	width: 360px; max-width: calc(100vw - 32px);
+	height: 480px; max-height: calc(100vh - 110px);
+	background: var(--nia-cb-bg); border-radius: 14px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
+	display: none; flex-direction: column; overflow: hidden;
+}
+.nia-cb-panel.nia-cb-open { display: flex; }
+
+.nia-cb-header {
+	background: var(--nia-cb-primary); color: #fff;
+	padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+}
+.nia-cb-title { font-weight: 600; font-size: 16px; margin: 0; }
+.nia-cb-close { background: transparent; border: 0; color: #fff; font-size: 24px; line-height: 1; cursor: pointer; padding: 2px 8px; }
+
+.nia-cb-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; }
+.nia-cb-msg { max-width: 85%; padding: 9px 12px; border-radius: 12px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }
+.nia-cb-msg-user { align-self: flex-end; background: var(--nia-cb-primary); color: #fff; border-bottom-right-radius: 4px; }
+.nia-cb-msg-bot { align-self: flex-start; background: var(--nia-cb-muted); color: var(--nia-cb-text); border-bottom-left-radius: 4px; }
+.nia-cb-msg-typing { font-style: italic; opacity: .75; }
+
+.nia-cb-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #dde3ea; background: #fff; }
+.nia-cb-input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #b8c2cf; border-radius: 8px; font: inherit; color: inherit; }
+.nia-cb-send { border: 0; border-radius: 8px; padding: 0 16px; background: var(--nia-cb-primary); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.nia-cb-send:disabled { background: #9aa8ba; cursor: not-allowed; }
+
+/* Celular: janela ocupa quase toda a tela */
+@media (max-width: 480px) {
+	.nia-cb-panel { right: 8px; left: 8px; bottom: 80px; width: auto; max-width: none; height: calc(100vh - 100px); max-height: none; }
+	.nia-cb-toggle { right: 12px; bottom: 12px; }
+	.nia-cb-input { font-size: 16px; } /* evita zoom automatico no iOS */
+}
+@media (prefers-reduced-motion: no-preference) {
+	.nia-cb-panel.nia-cb-open { animation: nia-cb-in .18s ease-out; }
+	@keyframes nia-cb-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+</style>
+<style>
+	body { font-family: system-ui, "Segoe UI", Arial, sans-serif; margin: 0; color: #1f2933; background: #f4f6f9; }
+	header { background: #0b4fa8; color: #fff; padding: 24px 16px; }
+	main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+	.aviso { background: #fff7e0; border: 1px solid #f5a623; border-radius: 8px; padding: 12px 14px; }
+</style>
+</head>
+<body>
+<header><strong>Página de demonstração</strong> — NIA Chatbot Gemini (beta)</header>
+<main>
+	<h1>Site de exemplo</h1>
+	<p>Clique no botão azul no canto inferior direito para abrir o chatbot.</p>
+	<p class="aviso">Esta página usa o mesmo CSS e JS do plugin, com <strong>respostas simuladas</strong>. Ainda não há conexão com o WordPress nem com o Gemini.</p>
+</main>
+<script>
+/**
+ * NIA Chatbot Gemini - widget (Etapa 2).
+ * Nesta etapa as respostas sao SIMULADAS. A comunicacao com o endpoint REST entra na Etapa 3.
+ * Seguranca: todo texto entra na pagina via textContent (nunca innerHTML), evitando XSS.
+ */
+(function () {
+	'use strict';
+
+	var cfg = window.NiaChatbotConfig || {};
+	var MAX_LEN = parseInt(cfg.maxLength, 10) || 500;
+	var TEXT = {
+		title: cfg.title || 'Assistente FATEB',
+		welcome: cfg.welcome || 'Olá! Sou o assistente virtual da FATEB. Como posso ajudar?',
+		placeholder: cfg.placeholder || 'Digite sua pergunta…',
+		send: cfg.send || 'Enviar',
+		open: cfg.openLabel || 'Abrir chat',
+		close: cfg.closeLabel || 'Fechar chat',
+		typing: cfg.typing || 'Digitando…',
+		mock: cfg.mockReply || 'Esta é uma resposta simulada (versão beta). Em breve responderei com a ajuda da inteligência artificial.'
+	};
+
+	function el(tag, className, text) {
+		var node = document.createElement(tag);
+		if (className) { node.className = className; }
+		if (text) { node.textContent = text; }
+		return node;
+	}
+
+	function init() {
+		if (document.getElementById('nia-cb-root')) { return; }
+
+		var root = el('div', 'nia-cb-root');
+		root.id = 'nia-cb-root';
+
+		var toggle = el('button', 'nia-cb-toggle');
+		toggle.type = 'button';
+		toggle.setAttribute('aria-label', TEXT.open);
+		toggle.setAttribute('aria-expanded', 'false');
+		toggle.setAttribute('aria-controls', 'nia-cb-panel');
+		toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>'; // SVG fixo, sem dados do usuario
+
+		var panel = el('div', 'nia-cb-panel');
+		panel.id = 'nia-cb-panel';
+		panel.setAttribute('role', 'dialog');
+		panel.setAttribute('aria-label', TEXT.title);
+
+		var header = el('div', 'nia-cb-header');
+		header.appendChild(el('h2', 'nia-cb-title', TEXT.title));
+		var closeBtn = el('button', 'nia-cb-close', '×');
+		closeBtn.type = 'button';
+		closeBtn.setAttribute('aria-label', TEXT.close);
+		header.appendChild(closeBtn);
+
+		var messages = el('div', 'nia-cb-messages');
+		messages.setAttribute('role', 'log');
+		messages.setAttribute('aria-live', 'polite');
+
+		var form = el('form', 'nia-cb-form');
+		var input = el('input', 'nia-cb-input');
+		input.type = 'text';
+		input.maxLength = MAX_LEN;
+		input.placeholder = TEXT.placeholder;
+		input.setAttribute('aria-label', TEXT.placeholder);
+		input.autocomplete = 'off';
+		var send = el('button', 'nia-cb-send', TEXT.send);
+		send.type = 'submit';
+		send.disabled = true;
+		form.appendChild(input);
+		form.appendChild(send);
+
+		panel.appendChild(header);
+		panel.appendChild(messages);
+		panel.appendChild(form);
+		root.appendChild(toggle);
+		root.appendChild(panel);
+		document.body.appendChild(root);
+
+		var waiting = false;
+
+		function addMessage(who, text, extra) {
+			var m = el('div', 'nia-cb-msg nia-cb-msg-' + who + (extra ? ' ' + extra : ''), text);
+			messages.appendChild(m);
+			messages.scrollTop = messages.scrollHeight;
+			return m;
+		}
+
+		function updateSend() {
+			send.disabled = waiting || input.value.trim() === '';
+		}
+
+		function setOpen(open) {
+			panel.classList.toggle('nia-cb-open', open);
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			toggle.setAttribute('aria-label', open ? TEXT.close : TEXT.open);
+			if (open) {
+				if (!messages.children.length) { addMessage('bot', TEXT.welcome); }
+				input.focus();
+			} else {
+				toggle.focus();
+			}
+		}
+
+		toggle.addEventListener('click', function () { setOpen(!panel.classList.contains('nia-cb-open')); });
+		closeBtn.addEventListener('click', function () { setOpen(false); });
+		panel.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setOpen(false); } });
+		input.addEventListener('input', updateSend);
+
+		form.addEventListener('submit', function (e) {
+			e.preventDefault();
+			var text = input.value.trim().slice(0, MAX_LEN);
+			if (!text || waiting) { return; }
+			addMessage('user', text);
+			input.value = '';
+			waiting = true;
+			updateSend();
+			var typing = addMessage('bot', TEXT.typing, 'nia-cb-msg-typing');
+			// Etapa 2: resposta simulada. Etapa 3 troca este bloco por fetch() ao endpoint REST.
+			window.setTimeout(function () {
+				messages.removeChild(typing);
+				addMessage('bot', TEXT.mock);
+				waiting = false;
+				updateSend();
+				input.focus();
+			}, 700);
+		});
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
+	} else {
+		init();
+	}
+})();
+
+</script>
+</body>
+</html>

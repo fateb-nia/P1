@@ -1,0 +1,67 @@
+/* NIA Chatbot Gemini - estilos do widget. Prefixo .nia-cb- evita conflito com o tema. */
+.nia-cb-root, .nia-cb-root * { box-sizing: border-box; }
+.nia-cb-root {
+	--nia-cb-primary: #0b4fa8;
+	--nia-cb-primary-dark: #083a7d;
+	--nia-cb-bg: #ffffff;
+	--nia-cb-text: #1f2933;
+	--nia-cb-muted: #eef2f7;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+	font-size: 15px;
+	line-height: 1.4;
+	color: var(--nia-cb-text);
+}
+
+/* Botao flutuante */
+.nia-cb-toggle {
+	position: fixed; right: 16px; bottom: 16px; z-index: 99998;
+	width: 56px; height: 56px; border: 0; border-radius: 50%;
+	background: var(--nia-cb-primary); color: #fff; cursor: pointer;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+	display: flex; align-items: center; justify-content: center;
+}
+.nia-cb-toggle:hover { background: var(--nia-cb-primary-dark); }
+.nia-cb-toggle:focus-visible, .nia-cb-send:focus-visible, .nia-cb-close:focus-visible, .nia-cb-input:focus-visible {
+	outline: 3px solid #f5a623; outline-offset: 2px;
+}
+.nia-cb-toggle svg { width: 28px; height: 28px; fill: currentColor; }
+
+/* Janela */
+.nia-cb-panel {
+	position: fixed; right: 16px; bottom: 84px; z-index: 99999;
+	width: 360px; max-width: calc(100vw - 32px);
+	height: 480px; max-height: calc(100vh - 110px);
+	background: var(--nia-cb-bg); border-radius: 14px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
+	display: none; flex-direction: column; overflow: hidden;
+}
+.nia-cb-panel.nia-cb-open { display: flex; }
+
+.nia-cb-header {
+	background: var(--nia-cb-primary); color: #fff;
+	padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+}
+.nia-cb-title { font-weight: 600; font-size: 16px; margin: 0; }
+.nia-cb-close { background: transparent; border: 0; color: #fff; font-size: 24px; line-height: 1; cursor: pointer; padding: 2px 8px; }
+
+.nia-cb-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; }
+.nia-cb-msg { max-width: 85%; padding: 9px 12px; border-radius: 12px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }
+.nia-cb-msg-user { align-self: flex-end; background: var(--nia-cb-primary); color: #fff; border-bottom-right-radius: 4px; }
+.nia-cb-msg-bot { align-self: flex-start; background: var(--nia-cb-muted); color: var(--nia-cb-text); border-bottom-left-radius: 4px; }
+.nia-cb-msg-typing { font-style: italic; opacity: .75; }
+
+.nia-cb-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #dde3ea; background: #fff; }
+.nia-cb-input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #b8c2cf; border-radius: 8px; font: inherit; color: inherit; }
+.nia-cb-send { border: 0; border-radius: 8px; padding: 0 16px; background: var(--nia-cb-primary); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.nia-cb-send:disabled { background: #9aa8ba; cursor: not-allowed; }
+
+/* Celular: janela ocupa quase toda a tela */
+@media (max-width: 480px) {
+	.nia-cb-panel { right: 8px; left: 8px; bottom: 80px; width: auto; max-width: none; height: calc(100vh - 100px); max-height: none; }
+	.nia-cb-toggle { right: 12px; bottom: 12px; }
+	.nia-cb-input { font-size: 16px; } /* evita zoom automatico no iOS */
+}
+@media (prefers-reduced-motion: no-preference) {
+	.nia-cb-panel.nia-cb-open { animation: nia-cb-in .18s ease-out; }
+	@keyframes nia-cb-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}

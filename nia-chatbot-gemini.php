@@ -101,5 +101,6 @@ function nia_chatbot_gemini_load_textdomain() {
 }
 add_action( 'init', 'nia_chatbot_gemini_load_textdomain' );
 
-// Etapa 2: carregar aqui a classe principal (includes/class-plugin.php)
-// e iniciar a interface (botão flutuante e janela do chatbot).
+// Etapa 2: widget do chatbot (botão flutuante e janela de conversa).
+require_once NIA_CHATBOT_GEMINI_DIR . 'includes/class-widget.php';
+NIA_Chatbot_Gemini_Widget::init();
