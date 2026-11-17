@@ -1,0 +1,23 @@
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Dependências e builds
+node_modules/
+vendor/
+*.zip
+
+# Logs e temporários
+*.log
+debug.log
+*.tmp
+
+# Segredos: nunca versionar chaves ou configurações locais
+.env
+.env.*
+wp-config.php
+*.key
+secrets/
